@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "./generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  id              String   @id @default(uuid())
+  name            String   @db.VarChar(100)
+  email           String   @unique @db.VarChar(100)
+  password        String
+  profile_picture String?  @db.VarChar(255)
+  role            Role
+  is_verified     Boolean
+  created_at      DateTime @default(now())
+  update_at       DateTime @updatedAt
+  verify_otp      String?  @db.VarChar(6)
+  cart            carts[]
+}
+
+model items {
+  id          String        @id @default(uuid())
+  item_name   String        @unique @db.VarChar(10)
+  description String        @db.VarChar(50)
+  price       Int
+  stock       Int
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+  item_images item_images[]
+  category    Category
+}
+
+model carts {
+  id          String   @id @default(uuid())
+  cart_id     String
+  total_item  Int      @default(0)
+  total_price Int      @default(0)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  user        users    @relation(fields: [cart_id], references: [id])
+}
+
+model item_images {
+  id         String   @id @default(uuid())
+  items_id   String
+  image_url  String   @db.VarChar(255)
+  created_at DateTime @default(now())
+  item       items    @relation(fields: [items_id], references: [id])
+}
+
+model payment {
+  id         String        @id @default(uuid())
+  user_id    String
+  status     PaymentStatus
+  created_at DateTime      @default(now())
+  updated_at DateTime      @updatedAt
+}
+
+enum PaymentStatus {
+  APPROVED
+  CANCELLED
+  EXPIRED
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum Category {
+  JACKET
+  TSHIRT
+  PANTS
+  SHOES
+}
