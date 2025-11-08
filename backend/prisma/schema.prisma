@@ -15,39 +15,58 @@ datasource db {
 }
 
 model users {
-  id              String   @id @default(uuid())
-  name            String   @db.VarChar(100)
-  email           String   @unique @db.VarChar(100)
+  id              String     @id @default(uuid())
+  name            String     @db.VarChar(100)
+  email           String     @unique @db.VarChar(100)
   password        String
-  profile_picture String?  @db.VarChar(255)
+  profile_picture String?    @db.VarChar(255)
   role            Role
-  is_verified     Boolean
-  created_at      DateTime @default(now())
-  update_at       DateTime @updatedAt
-  verify_otp      String?  @db.VarChar(6)
-  cart            carts[]
+  is_verified     Boolean    @default(false)
+  created_at      DateTime   @default(now())
+  updated_at      DateTime   @updatedAt
+  verify_otp      String?    @db.VarChar(6)
+  cart            carts?
+  orders          orders[]
+  payments        payments[]
 }
 
 model items {
   id          String        @id @default(uuid())
-  item_name   String        @unique @db.VarChar(10)
-  description String        @db.VarChar(50)
+  item_name   String        @unique @db.VarChar(100)
+  description String        @db.VarChar(255)
   price       Int
   stock       Int
   created_at  DateTime      @default(now())
   updated_at  DateTime      @updatedAt
   item_images item_images[]
   category    Category
+  cart_items  cart_item[]
+  order_items orderItem[]
 }
 
 model carts {
-  id          String   @id @default(uuid())
-  cart_id     String
-  total_item  Int      @default(0)
-  total_price Int      @default(0)
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-  user        users    @relation(fields: [cart_id], references: [id])
+  id      String @id @default(uuid())
+  user_id String @unique
+
+  total_item  Int
+  total_price Int
+  created_at  DateTime    @default(now())
+  updated_at  DateTime    @updatedAt
+  user        users       @relation(fields: [user_id], references: [id])
+  cart_items  cart_item[]
+}
+
+model cart_item {
+  id         String   @id @default(uuid())
+  cart_id    String
+  item_id    String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  cart carts @relation(fields: [cart_id], references: [id])
+  item items @relation(fields: [item_id], references: [id])
+
+  @@unique([cart_id, item_id])
 }
 
 model item_images {
@@ -58,18 +77,64 @@ model item_images {
   item       items    @relation(fields: [items_id], references: [id])
 }
 
-model payment {
-  id         String        @id @default(uuid())
-  user_id    String
-  status     PaymentStatus
-  created_at DateTime      @default(now())
-  updated_at DateTime      @updatedAt
+model orders {
+  id                      String      @id @default(uuid())
+  user_id                 String
+  total_price             Int
+  order_status            OrderStatus @default(PENDING)
+  midtrans_snap_token     String?
+  midtrans_transaction_id String?     @unique
+  midtrans_response_json  String?     @db.Text
+  shipping_address        String      @db.VarChar(255)
+  created_at              DateTime    @default(now())
+  updated_at              DateTime    @updatedAt
+
+  user        users       @relation(fields: [user_id], references: [id])
+  order_items orderItem[]
+  payment     payments[]
+}
+
+model orderItem {
+  id         String @id @default(uuid())
+  order_id   String
+  item_id    String
+  item_name  String @db.VarChar(100)
+  item_price Int
+  quantity   Int
+
+  order orders @relation(fields: [order_id], references: [id])
+  item  items  @relation(fields: [item_id], references: [id])
+
+  @@unique([order_id, item_id])
+}
+
+model payments {
+  id                     String        @id @default(uuid())
+  order_id               String        @unique
+  user_id                String
+  status                 PaymentStatus
+  payment_method         String?       @db.VarChar(50)
+  midtrans_response_json String?       @db.Text
+  paid_at                DateTime?
+  created_at             DateTime      @default(now())
+  updated_at             DateTime      @updatedAt
+
+  order orders @relation(fields: [order_id], references: [id])
+  user  users  @relation(fields: [user_id], references: [id])
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
 }
 
 enum PaymentStatus {
+  PENDING
   APPROVED
   CANCELLED
-  EXPIRED
 }
 
 enum Role {

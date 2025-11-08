@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import express, { Application, Request, Response } from "express";
 import cors from "cors";
+import AuthRoutes from "./routes/auth.routes";
 dotenv.config();
 
 const port = process.env.PORT || 4000;
@@ -20,9 +21,11 @@ class App {
   }
 
   private routes(): void {
+    const authRouter = new AuthRoutes();
     this.app.get("/", (req: Request, res: Response) => {
       res.status(200).send("<h1>Welcome To API Server</h1>");
     });
+    this.app.use("/auth", authRouter.getRouter());
   }
 
   private errorHandler(): void {
