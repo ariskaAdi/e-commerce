@@ -9,3 +9,8 @@ export type TAuth = {
   verify_otp?: string | null;
   role: Role;
 };
+
+export type LoginResponseTypes = {
+  email: string;
+  password: string;
+};

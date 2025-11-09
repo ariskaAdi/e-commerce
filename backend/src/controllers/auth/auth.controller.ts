@@ -27,16 +27,16 @@ class AuthController {
     next: NextFunction
   ): Promise<void> {
     try {
-      // const { ...user } = await loginService(req.body, res);
-      // res.status(200).send({
-      //   success: true,
-      //   message: "User logged in successfully",
-      //   user: {
-      //     email: user.email,
-      //     name: user.name,
-      //   },
-      //   token: user.token,
-      // });
+      const { ...user } = await loginService(req.body, res);
+      res.status(200).send({
+        success: true,
+        message: "User logged in successfully",
+        user: {
+          email: user.email,
+          name: user.name,
+        },
+        token: user.token,
+      });
     } catch (error) {
       next(error);
     }
