@@ -3,6 +3,7 @@ import express, { Application, NextFunction, Request, Response } from "express";
 import cors from "cors";
 import AuthRoutes from "./routes/auth.routes";
 import logger from "./utils/logger";
+import ProductsRoutes from "./routes/products.routes";
 dotenv.config();
 
 const port: string | number = process.env.PORT || 4000;
@@ -33,10 +34,12 @@ class App {
 
   private routes(): void {
     const authRouter = new AuthRoutes();
+    const productsRouter = new ProductsRoutes();
     this.app.get("/", (req: Request, res: Response) => {
       res.status(200).send("<h1>Welcome To API Server</h1>");
     });
     this.app.use("/auth", authRouter.getRouter());
+    this.app.use("/products", productsRouter.getRouter());
   }
 
   private errorHandler(): void {

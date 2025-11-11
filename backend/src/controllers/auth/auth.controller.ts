@@ -31,10 +31,6 @@ class AuthController {
       res.status(200).send({
         success: true,
         message: "User logged in successfully",
-        user: {
-          email: user.email,
-          name: user.name,
-        },
         token: user.token,
       });
     } catch (error) {
